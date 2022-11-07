@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"time"
 
 	"github.com/pebbe/zmq4"
 )
@@ -130,27 +131,17 @@ func main() {
     log.Fatal(err)
   }
 
-	socketGroup, err := prepareSockets(connectionInfo)
+	sockets, err := prepareSockets(connectionInfo)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var reactor = zmq4.NewReactor()
-	reactor.AddSocket(socketGroup.HBSocket, zmq4.POLLIN | zmq4.POLLOUT, func(s zmq4.State) error {
-		return nil
-	})
-	reactor.AddSocket(socketGroup.ControlSocket, zmq4.POLLIN | zmq4.POLLOUT, func(s zmq4.State) error {
-		return nil
-	})
-	reactor.AddSocket(socketGroup.ShellSocket, zmq4.POLLIN | zmq4.POLLOUT, func(s zmq4.State) error {
-		return nil
-	})
-	reactor.AddSocket(socketGroup.StdinSocket, zmq4.POLLIN | zmq4.POLLOUT, func(s zmq4.State) error {
-		return nil
-	})
-	reactor.AddSocket(socketGroup.IOPubSocket, zmq4.POLLOUT, func(s zmq4.State) error {
-		return nil
-	})
 
-	reactor.Run(-1)
+	var _/*hbHandler*/ = NewMessageChannels(sockets.HBSocket, reactor)
+	var _/*shellHandler*/ = NewMessageChannels(sockets.ShellSocket, reactor)
+	var _/*stdinHandler*/ = NewMessageChannels(sockets.StdinSocket, reactor)
+	var _/*iopubHandlers*/ = NewMessageChannels(sockets.IOPubSocket, reactor)
+	
+	reactor.Run(100 * time.Microsecond)
 }
